@@ -7,31 +7,8 @@ import java.util.Stack;
 
 public class Gerry implements Gerrymanderer
 {
-    public Gerry()
-    {
-
-    }
-
-    /*
-
-
-     */
-
     @Override
-    public int[][] gerrymander(Electorate electorate, boolean party)
-    {
-        // getNumberOfDistricts()
-        // getVoters()
-        // winner() -> whos winning this district
-        // getPurpleWins() -> how  many districts are purple
-        // isValidMap()
+    public int[][] gerrymander(Electorate electorate, boolean party) {
         return new int[0][];
     }
-
-    private void dfs(boolean[] visited, Stack<Integer> st, int v)
-    {
-
-    }
-
-
 }
