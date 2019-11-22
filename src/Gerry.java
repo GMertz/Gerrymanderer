@@ -8,7 +8,8 @@ import java.util.Stack;
 public class Gerry implements Gerrymanderer
 {
     @Override
-    public int[][] gerrymander(Electorate electorate, boolean party) {
+    public int[][] gerrymander(Electorate electorate, boolean party)
+    {
         return new int[0][];
     }
 }
