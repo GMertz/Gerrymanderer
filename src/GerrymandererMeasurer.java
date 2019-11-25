@@ -6,7 +6,7 @@
 public class GerrymandererMeasurer {
 
     public static void main(String[] args) {
-        Gerrymanderer gerrymanderer = new Striper(); // Change this to create an instance of your class
+        Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
         StdOut.println(measure(9, gerrymanderer, 100));
     }
 
