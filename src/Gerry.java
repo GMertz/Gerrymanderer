@@ -38,21 +38,79 @@ public class Gerry implements Gerrymanderer
                 DFSUtil(member, visited,0,0, path);
             }
         }
+
+        private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
+        {
+            //
+            //-------------------------------
+            // get partition from proposal
+        /*
+            We want to check all the nodes not in proposal (but are being considered in Partition)
+            to see if they connect to a node in NextD
+            Since we will calculate this 'other district', we should store it in some manner so we dont have to
+            do it again later
+        */
+            //-------------------------------
+
+            boolean[] visited = new boolean[D];
+            boolean[] valid = new boolean[D];
+            for (int i = 0; i < D; i++)
+            {
+                valid[i] = partitionIsValidUtil(i,visited,valid,Dist,NextD);
+                if(!valid[i]) return false;
+            }
+            return true;
+        }
+
+        private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, int Dist, int NextD)
+        {
+            if (valid[v]) return true;
+
+            visited[v] = true;
+            boolean validity = false;
+
+            for (int e : G.adj(v))
+            {
+                if (DistrictLookup[e] == NextD)
+                {
+                    validity = true;
+                }
+                else if(DistrictLookup[e] == Dist)
+                {
+                    if (validity)
+                    {
+                        visited[e] = true;
+                        valid[e] = true;
+                    }
+                    else if (visited[e])
+                    {
+                        validity = valid[e];
+                    }
+                    else
+                    {
+                        validity = partitionIsValidUtil(e, visited, valid, Dist, NextD);
+                        valid[e] = validity;
+                    }
+                }
+            }
+            return validity;
+        }
+
         private int DFSUtil(int v, boolean[] visited, int count, int voters, int[] path)
         {
             visited[v] = true;
-            if (count == D  && Math.abs(voters-r) < bestCount  && partitionIsValid(path, D1, DNext))
+            if (count == D-1  && Math.abs(voters-r) < bestCount  && partitionIsValid(path, D1, DNext))
             {
                 bestCount = Math.abs(voters-r);
                 best = path;
                 return voters;
             }
+
             path[count++] = v;
             if (VoterAlignments[v] == Party) voters++;
 
             for (int edge : G.adj(v))
             {
-
                 if(!visited[edge] && (DistrictLookup[edge] == D1 || DistrictLookup[edge] == D2))
                 {
                     int amt = DFSUtil(edge, visited, count, voters, path);
@@ -105,27 +163,27 @@ public class Gerry implements Gerrymanderer
         {
             int dist = i / D;
             DistrictLookup[i] = (dist);
-            Districts[D][i] = (D*dist)+i;
+            Districts[D-1][i] = (D*dist)+i;
         }
     }
 
     private void Partition(int a, int b)
     {
         Partition p = new Partition(a, b);
+        Districts[a] = p.partition1;
+        Districts[b] = p.partition2;
+        for (int i = 0; i < D; i++) {
+            DistrictLookup[p.partition1[i]] = a;
+            DistrictLookup[p.partition2[i]] = b;
+        }
+
+        //-------------------------------
         // apply the partition!
         //update DistrictLookup
         //update Districts
         //Idk if we need OptimizedVoters, but if we do update it
+        //-------------------------------
 
-
-
-//        for (int member: Districts[a])
-//        {
-//            boolean[] visited = new boolean[v];
-//            int[] path = new int[D];
-//
-//            DFSUtil(member, a,b,visited,0,0,path);
-//        }
         // BFS out from node, counting black nodes in path
         // When length is D check if its valid
         // if number of black nodes is r, done
@@ -135,43 +193,20 @@ public class Gerry implements Gerrymanderer
         // At the end, if we haven't found a suitable set use the best we've found so far
     }
 
-//    private int DFSUtil(int v, int a, int b, boolean[] visited, int count, int voters, int[] path, int[] best, int bestCount)
-//    {
-//        visited[v] = true;
-//        if (count == D  && (voters > r || voters == 0)  && partitionIsValid(path))
-//        {
-//            if (voters > r)
-//            {
-//
-//            }
-//        }
-//        for (int edge : G.adj(v))
-//        {
-//            //if (should traverse)
-//            /*
-//                if continue partition == 0 or == r return same thing
-//                //else continue looking
-//             */
-//
-//            if(!visited[edge] && DistrictLookup[edge] == a || DistrictLookup[edge] == b)
-//            {
-//
-//            }
-//        }
-//        //return best_count
-//    }
-
-
     // check if every element in proposal (district D) can reach the next district (NextD)
-    private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
+    /*private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
     {
+        //
+        //-------------------------------
         // get partition from proposal
-        /*
+        *//*
             We want to check all the nodes not in proposal (but are being considered in Partition)
             to see if they connect to a node in NextD
             Since we will calculate this 'other district', we should store it in some manner so we dont have to
             do it again later
-         */
+        *//*
+        //-------------------------------
+
         boolean[] visited = new boolean[D];
         boolean[] valid = new boolean[D];
         for (int i = 0; i < D; i++)
@@ -184,6 +219,8 @@ public class Gerry implements Gerrymanderer
 
     private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, int Dist, int NextD)
     {
+        if (valid[v]) return true;
+
         visited[v] = true;
         boolean validity = false;
 
@@ -195,7 +232,6 @@ public class Gerry implements Gerrymanderer
             }
             else if(DistrictLookup[e] == Dist)
             {
-
                 if (validity)
                 {
                     visited[e] = true;
@@ -205,11 +241,15 @@ public class Gerry implements Gerrymanderer
                 {
                     validity = valid[e];
                 }
-                else valid[e] = partitionIsValidUtil(e, visited, valid, Dist, NextD);
+                else
+                {
+                    validity = partitionIsValidUtil(e, visited, valid, Dist, NextD);
+                    valid[e] = validity;
+                }
             }
         }
         return validity;
-    }
+    }*/
 
     private int[][] Publish()
     {
