@@ -1,10 +1,8 @@
 import edu.princeton.cs.algs4.Graph;
+import edu.princeton.cs.algs4.StdIn;
 import edu.princeton.cs.algs4.StdOut;
 
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 /*
 There is a number of code prettification things that can happen, also im sure theres a bunch of off by one errors with
@@ -31,17 +29,20 @@ public class Gerry implements Gerrymanderer
             P1 = Districts[D1];
             P2 = Districts[D2];
 
+            // Invalid Arrangements are coming out
+            // I think it's because if the algorithm doesn't find a partition better than the default, it will
+            //revert to default, which can sometimes be fragmented
+
             bestCount = Integer.MAX_VALUE;
 
-
-            DNext = D2 == D-1 ? D2 : D2+1;
+            DNext = D2 == D-1 ? D2 : D2+1; // this doesn't work, will strand nodes at the end
             int[] path = new int[D];
-
             for (int member: Districts[a])
             {
                 boolean[] visited = new boolean[v];
                 DFSUtil(member, visited,0,0, path);
             }
+            //StdOut.println("\n-------------------");
         }
 
         public int[] GetP1()
@@ -62,12 +63,13 @@ public class Gerry implements Gerrymanderer
 
             if (count == D)
             {
-                if((voters == 0 || (voters >= r && voters < bestCount)) && partitionIsValid(path))
+                if((voters == 0 || (voters >= r && voters < bestCount)  || bestCount == Integer.MAX_VALUE) && partitionIsValid(path))
                 {
                     bestCount = voters;
                     P1 = Arrays.copyOf(path, D);
                     return voters;
                 }
+                visited[v] = false;
                 return -1;
             }
 
@@ -79,11 +81,66 @@ public class Gerry implements Gerrymanderer
                     if (amt == 0 || amt == r) return amt;
                 }
             }
+            visited[v] = false;
             return bestCount;
         }
+
+
+        private boolean EndPartitionIsValid(int[] proposal)
+        {
+            HashSet<Integer> InProposal = new HashSet<>(D);
+
+            for (int e : proposal) InProposal.add(e);
+
+            boolean[] visited = new boolean[v];
+            Stack<Integer> st = new Stack<>();
+
+            int[] other = new int[D]; // if proposal is valid, this will replace P2
+            int k = -1; //index for filling 'other
+            int count = 0, p;
+
+            for (int i = 0; i < D*2; i++)
+            {
+                // for the first D iterations, use D1, then use D2
+                int Dist = (i >= D)? D2 : D1;
+                int e = Districts[Dist][i%D];
+
+                // we are only considering the 'left-overs' (skip ones in proposal)
+                if (!InProposal.contains(e))
+                {
+                    st.push(e);
+
+                    while(!st.isEmpty())
+                    {
+                        p = st.pop();
+                        if (visited[p]) continue;
+
+                        other[count] = p;
+                        visited[p] = true;
+                        count += 1;
+
+                        for (int n : G.adj(p))
+                        {
+                            if(!visited[n] && !InProposal.contains(n) && (DistrictLookup[n] == D1 || DistrictLookup[n] == D2))
+                                st.push(n);
+                        }
+                    }
+
+                }
+                if (count != D) return false;
+                break;
+            }
+            P2 = other;
+            return true;
+        }
+
+
+        // not working for the final district
         private boolean partitionIsValid(int[] proposal)
         {
-            HashSet<Integer> InProposal = new HashSet<>(D/2);
+            //if (D2 == DNext) return EndPartitionIsValid(proposal);
+
+            HashSet<Integer> InProposal = new HashSet<>(D);
 
             for (int e : proposal) InProposal.add(e);
 
@@ -93,7 +150,6 @@ public class Gerry implements Gerrymanderer
 
             int[] other = new int[D]; // if proposal is valid, this will replace P2
             int k = -1; //index for filling 'other'
-            //StdOut.print("\n---------------------------\n");
             for (int i = 0; i < D*2; i++)
             {
                 // for the first D iterations, use D1, then use D2
@@ -106,16 +162,19 @@ public class Gerry implements Gerrymanderer
                     other[++k] = e;
 
                     valid[e] = partitionIsValidUtil(e, visited, valid, InProposal);
-                    if (!valid[e]) return false;
+                    if (!valid[e])
+                    {
+                        return false;
+                    }
                 }
             }
             P2 = other;
             return true;
         }
 
+        // edit this to count how many members of 'other' it is connected to
         private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, HashSet Proposal)
         {
-            // something is not working here
             visited[v] = true;
 
             for (int e : G.adj(v))
@@ -131,7 +190,7 @@ public class Gerry implements Gerrymanderer
                 {
                     return true;
                 }
-                else if(DistrictLookup[e] == D2)
+                else if(DistrictLookup[e] == D2 || DistrictLookup[e] == D1)
                 {
                     return (valid[e] = partitionIsValidUtil(e, visited,valid,Proposal));
                 }
@@ -140,34 +199,34 @@ public class Gerry implements Gerrymanderer
         }
     }
 
-    BitSet OptimizedVoters;
-    int[] DistrictLookup;
-    int[][] Districts;
-    final boolean Party = true;
-    Graph G;
-    boolean[] VoterAlignments;
+    // references to commonly used members
+    private boolean Party;
+    private Graph G;
+    private boolean[] VoterAlignments;
+    private int D; //number of districts
+    private int v; //number of voters
+    private int r; //required number of voters to win a district
+    private Electorate e;
 
-    BitSet OptimizedDistrictLookup;
+    private int[] DistrictLookup; //DAT for voters -> district
+    private int[][] Districts; // District partitions
 
-    int D; //number of districts
-    int v; //number of voters
-    int r; //required number of voters to win a district
 
     @Override
     public int[][] gerrymander(Electorate electorate, boolean party)
     {
+        Party = party;
         D = electorate.getNumberOfDistricts();
         v = D*D;
-        r = (int)Math.ceil(D/2);
-
-        OptimizedVoters = new BitSet();
-        OptimizedDistrictLookup = new BitSet();
+        r = (int)Math.ceil(D/2f);
         DistrictLookup = new int[v];
         Districts = new int[D][D];
         G = electorate.getGraph();
         VoterAlignments = electorate.getVoters();
+        e = electorate;
+
+
         Stripe();
-        //if (true) return Districts;
 
         for (int i = 0; i < D-1; i++)
         {
@@ -188,32 +247,20 @@ public class Gerry implements Gerrymanderer
         }
     }
 
+    // Partition district a and b into new districts, prioritizing the optimality of a
     private void Partition(int a, int b)
     {
-        Partition p = new Partition(a, b);
+        Partition p = new Partition(a, b); //create partitions
+
+        // Apply partitions
         Districts[a] = p.P1;
         Districts[b] = p.P2;
 
+        // Update lookup table
         for (int i = 0; i < D; i++)
         {
             DistrictLookup[p.P1[i]] = a;
             DistrictLookup[p.P2[i]] = b;
         }
-
-
-        // BFS out from node, counting black nodes in path
-        // When length is D check if its valid
-        // if number of black nodes is r, done
-        // Otherwise if number of black nodes is 0, done
-        // Otherwise save result with number of black nodes and continue
-           // Only have to store one of such sets, whichever is closest to optimal
-        // At the end, if we haven't found a suitable set use the best we've found so far
     }
-
-    private int[][] Publish()
-    {
-        return new int[0][];
-    }
-
-
 }

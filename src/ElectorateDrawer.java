@@ -1,4 +1,5 @@
 import edu.princeton.cs.algs4.Graph;
+import edu.princeton.cs.algs4.StdDraw;
 
 import java.awt.*;
 
@@ -15,11 +16,10 @@ public class ElectorateDrawer {
     public static void main(String[] args) {
         StdDraw.enableDoubleBuffering();
         Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
-        Electorate e = new Electorate(3);
+        Electorate e = new Electorate(5);
         int[][] districts = gerrymanderer.gerrymander(e, true);
         if (!e.isValidMap(districts)) {
-            //throw new RuntimeException("Invalid districts");
-            StdOut.print("Invalid");
+            throw new RuntimeException("Invalid districts");
         }
         draw(e, districts);
         int purple = e.getPurpleWins(districts);
@@ -63,6 +63,7 @@ public class ElectorateDrawer {
         }
         // Draw lines
         StdDraw.setPenColor(Color.BLACK);
+        StdDraw.setPenRadius(.008f);
         Graph g = electorate.graphWithOnlyWithinDistrictLines(districts);
         for (int i = 0; i < v; i++) {
             int x1 = i / d;
@@ -87,6 +88,7 @@ public class ElectorateDrawer {
             StdDraw.filledCircle(x, y, 0.25);
             StdDraw.setPenColor(Color.BLACK);
             StdDraw.circle(x, y, 0.25);
+            StdDraw.text(x,y,""+i);
         }
         StdDraw.show();
     }
