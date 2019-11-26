@@ -1,6 +1,8 @@
 import edu.princeton.cs.algs4.Graph;
 
 import java.util.BitSet;
+import java.util.HashMap;
+import java.util.HashSet;
 
 /*
 There is a number of code prettification things that can happen, also im sure theres a bunch of off by one errors with
@@ -12,6 +14,7 @@ public class Gerry implements Gerrymanderer
 {
     private class Partition
     {
+        int[] other;
         int[] best;
         int[] partition1;
         int[] partition2;
@@ -39,22 +42,50 @@ public class Gerry implements Gerrymanderer
             }
         }
 
+        private int DFSUtil(int v, boolean[] visited, int count, int voters, int[] path)
+        {
+            visited[v] = true;
+            if (count == D-1  && (voters == 0 || (voters >= r && voters < bestCount)) && partitionIsValid(path, D1, DNext))
+            {
+                bestCount = voters;
+                best = path;
+                return voters;
+            }
+
+            path[count++] = v;
+            if (VoterAlignments[v] == Party) voters++;
+
+            for (int edge : G.adj(v))
+            {
+                if(!visited[edge] && (DistrictLookup[edge] == D1 || DistrictLookup[edge] == D2))
+                {
+                    int amt = DFSUtil(edge, visited, count, voters, path);
+                    if (amt == 0 || amt == r) return amt;
+                }
+            }
+            return bestCount;
+        }
         private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
         {
-            //
+            HashSet<Integer> InProposal = new HashSet<>(D/2);
+            for (int e : proposal) InProposal.add(e);
+
             //-------------------------------
             // get partition from proposal
-        /*
-            We want to check all the nodes not in proposal (but are being considered in Partition)
-            to see if they connect to a node in NextD
-            Since we will calculate this 'other district', we should store it in some manner so we dont have to
-            do it again later
-        */
+            /*
+                We want to check all the nodes not in proposal (but are being considered in Partition)
+                to see if they connect to a node in NextD
+                Since we will calculate this 'other district', we should store it in some manner so we dont have to
+                do it again later
+            */
             //-------------------------------
 
             boolean[] visited = new boolean[D];
             boolean[] valid = new boolean[D];
-            for (int i = 0; i < D; i++)
+            // for each over each of the districts
+            // if the node is not in 'InProposal' then run partitionIsValidUtil on it
+            // etc.
+            for (int i = 0; i < D; ++i)
             {
                 valid[i] = partitionIsValidUtil(i,visited,valid,Dist,NextD);
                 if(!valid[i]) return false;
@@ -94,30 +125,6 @@ public class Gerry implements Gerrymanderer
                 }
             }
             return validity;
-        }
-
-        private int DFSUtil(int v, boolean[] visited, int count, int voters, int[] path)
-        {
-            visited[v] = true;
-            if (count == D-1  && Math.abs(voters-r) < bestCount  && partitionIsValid(path, D1, DNext))
-            {
-                bestCount = Math.abs(voters-r);
-                best = path;
-                return voters;
-            }
-
-            path[count++] = v;
-            if (VoterAlignments[v] == Party) voters++;
-
-            for (int edge : G.adj(v))
-            {
-                if(!visited[edge] && (DistrictLookup[edge] == D1 || DistrictLookup[edge] == D2))
-                {
-                    int amt = DFSUtil(edge, visited, count, voters, path);
-                    if (amt == 0 || amt == r) return amt;
-                }
-            }
-            return bestCount;
         }
     }
 
@@ -172,17 +179,13 @@ public class Gerry implements Gerrymanderer
         Partition p = new Partition(a, b);
         Districts[a] = p.partition1;
         Districts[b] = p.partition2;
-        for (int i = 0; i < D; i++) {
+
+        for (int i = 0; i < D; i++)
+        {
             DistrictLookup[p.partition1[i]] = a;
             DistrictLookup[p.partition2[i]] = b;
         }
 
-        //-------------------------------
-        // apply the partition!
-        //update DistrictLookup
-        //update Districts
-        //Idk if we need OptimizedVoters, but if we do update it
-        //-------------------------------
 
         // BFS out from node, counting black nodes in path
         // When length is D check if its valid
@@ -192,64 +195,6 @@ public class Gerry implements Gerrymanderer
            // Only have to store one of such sets, whichever is closest to optimal
         // At the end, if we haven't found a suitable set use the best we've found so far
     }
-
-    // check if every element in proposal (district D) can reach the next district (NextD)
-    /*private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
-    {
-        //
-        //-------------------------------
-        // get partition from proposal
-        *//*
-            We want to check all the nodes not in proposal (but are being considered in Partition)
-            to see if they connect to a node in NextD
-            Since we will calculate this 'other district', we should store it in some manner so we dont have to
-            do it again later
-        *//*
-        //-------------------------------
-
-        boolean[] visited = new boolean[D];
-        boolean[] valid = new boolean[D];
-        for (int i = 0; i < D; i++)
-        {
-            valid[i] = partitionIsValidUtil(i,visited,valid,Dist,NextD);
-            if(!valid[i]) return false;
-        }
-        return true;
-    }
-
-    private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, int Dist, int NextD)
-    {
-        if (valid[v]) return true;
-
-        visited[v] = true;
-        boolean validity = false;
-
-        for (int e : G.adj(v))
-        {
-            if (DistrictLookup[e] == NextD)
-            {
-                validity = true;
-            }
-            else if(DistrictLookup[e] == Dist)
-            {
-                if (validity)
-                {
-                    visited[e] = true;
-                    valid[e] = true;
-                }
-                else if (visited[e])
-                {
-                    validity = valid[e];
-                }
-                else
-                {
-                    validity = partitionIsValidUtil(e, visited, valid, Dist, NextD);
-                    valid[e] = validity;
-                }
-            }
-        }
-        return validity;
-    }*/
 
     private int[][] Publish()
     {
