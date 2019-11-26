@@ -14,11 +14,12 @@ public class ElectorateDrawer {
 
     public static void main(String[] args) {
         StdDraw.enableDoubleBuffering();
-        Gerrymanderer gerrymanderer = new Striper(); // Change this to create an instance of your class
-        Electorate e = new Electorate(9);
+        Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
+        Electorate e = new Electorate(3);
         int[][] districts = gerrymanderer.gerrymander(e, true);
         if (!e.isValidMap(districts)) {
-            throw new RuntimeException("Invalid districts");
+            //throw new RuntimeException("Invalid districts");
+            StdOut.print("Invalid");
         }
         draw(e, districts);
         int purple = e.getPurpleWins(districts);

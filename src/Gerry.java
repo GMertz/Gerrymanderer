@@ -1,5 +1,7 @@
 import edu.princeton.cs.algs4.Graph;
+import edu.princeton.cs.algs4.StdOut;
 
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,46 +16,60 @@ public class Gerry implements Gerrymanderer
 {
     private class Partition
     {
-        int[] other;
-        int[] best;
-        int[] partition1;
-        int[] partition2;
-        int bestCount;
-        int D1;
-        int D2;
-        int DNext;
+        private int[] P1;
+        private int[] P2;
+        private int bestCount;
+        private int D1;
+        private int D2;
+        private int DNext;
 
         public Partition(int a, int b)
         {
-            best = new int[D];
-            bestCount = Integer.MAX_VALUE;
-            partition1 = new int[D];
-            partition2 = new int[D];
             D1 = a;
             D2 = b;
-            DNext = b == D-1 ? b : b+1;
+
+            P1 = Districts[D1];
+            P2 = Districts[D2];
+
+            bestCount = Integer.MAX_VALUE;
+
+
+            DNext = D2 == D-1 ? D2 : D2+1;
+            int[] path = new int[D];
 
             for (int member: Districts[a])
             {
                 boolean[] visited = new boolean[v];
-                int[] path = new int[D];
-
                 DFSUtil(member, visited,0,0, path);
             }
+        }
+
+        public int[] GetP1()
+        {
+            return P1;
+        }
+
+        public int[] GetP2()
+        {
+            return P2;
         }
 
         private int DFSUtil(int v, boolean[] visited, int count, int voters, int[] path)
         {
             visited[v] = true;
-            if (count == D-1  && (voters == 0 || (voters >= r && voters < bestCount)) && partitionIsValid(path, D1, DNext))
-            {
-                bestCount = voters;
-                best = path;
-                return voters;
-            }
-
             path[count++] = v;
             if (VoterAlignments[v] == Party) voters++;
+
+            if (count == D)
+            {
+                if((voters == 0 || (voters >= r && voters < bestCount)) && partitionIsValid(path))
+                {
+                    bestCount = voters;
+                    P1 = Arrays.copyOf(path, D);
+                    return voters;
+                }
+                return -1;
+            }
 
             for (int edge : G.adj(v))
             {
@@ -65,66 +81,62 @@ public class Gerry implements Gerrymanderer
             }
             return bestCount;
         }
-        private boolean partitionIsValid(int[] proposal, int Dist, int NextD)
+        private boolean partitionIsValid(int[] proposal)
         {
             HashSet<Integer> InProposal = new HashSet<>(D/2);
+
             for (int e : proposal) InProposal.add(e);
 
-            //-------------------------------
-            // get partition from proposal
-            /*
-                We want to check all the nodes not in proposal (but are being considered in Partition)
-                to see if they connect to a node in NextD
-                Since we will calculate this 'other district', we should store it in some manner so we dont have to
-                do it again later
-            */
-            //-------------------------------
+            boolean[] visited = new boolean[v];
+            boolean[] valid = new boolean[v];
 
-            boolean[] visited = new boolean[D];
-            boolean[] valid = new boolean[D];
-            // for each over each of the districts
-            // if the node is not in 'InProposal' then run partitionIsValidUtil on it
-            // etc.
-            for (int i = 0; i < D; ++i)
+
+            int[] other = new int[D]; // if proposal is valid, this will replace P2
+            int k = -1; //index for filling 'other'
+            //StdOut.print("\n---------------------------\n");
+            for (int i = 0; i < D*2; i++)
             {
-                valid[i] = partitionIsValidUtil(i,visited,valid,Dist,NextD);
-                if(!valid[i]) return false;
+                // for the first D iterations, use D1, then use D2
+                int Dist = (i >= D)? D2 : D1;
+                int e = Districts[Dist][i%D];
+
+                // we are only considering the 'left-overs' (skip ones in proposal)
+                if (!InProposal.contains(e))
+                {
+                    other[++k] = e;
+
+                    valid[e] = partitionIsValidUtil(e, visited, valid, InProposal);
+                    if (!valid[e]) return false;
+                }
             }
+            P2 = other;
             return true;
         }
 
-        private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, int Dist, int NextD)
+        private boolean partitionIsValidUtil(int v, boolean[] visited, boolean[] valid, HashSet Proposal)
         {
-            if (valid[v]) return true;
-
+            // something is not working here
             visited[v] = true;
-            boolean validity = false;
 
             for (int e : G.adj(v))
             {
-                if (DistrictLookup[e] == NextD)
+                if (Proposal.contains(e)) continue;
+
+                // if v has an edge leading to the next district up, we are valid
+                if(visited[e])
                 {
-                    validity = true;
+                    return valid[e];
                 }
-                else if(DistrictLookup[e] == Dist)
+                if (DistrictLookup[e] == DNext)
                 {
-                    if (validity)
-                    {
-                        visited[e] = true;
-                        valid[e] = true;
-                    }
-                    else if (visited[e])
-                    {
-                        validity = valid[e];
-                    }
-                    else
-                    {
-                        validity = partitionIsValidUtil(e, visited, valid, Dist, NextD);
-                        valid[e] = validity;
-                    }
+                    return true;
+                }
+                else if(DistrictLookup[e] == D2)
+                {
+                    return (valid[e] = partitionIsValidUtil(e, visited,valid,Proposal));
                 }
             }
-            return validity;
+            return false;
         }
     }
 
@@ -155,35 +167,37 @@ public class Gerry implements Gerrymanderer
         G = electorate.getGraph();
         VoterAlignments = electorate.getVoters();
         Stripe();
+        //if (true) return Districts;
 
         for (int i = 0; i < D-1; i++)
         {
             Partition(i,i+1);
         }
 
-        return Publish();
+        return Districts;
     }
 
     private void Stripe()
     {
+        int dist;
         for (int i = 0; i < v; i++)
         {
-            int dist = i / D;
+            dist = i / D;
             DistrictLookup[i] = (dist);
-            Districts[D-1][i] = (D*dist)+i;
+            Districts[dist][i % D] = i;
         }
     }
 
     private void Partition(int a, int b)
     {
         Partition p = new Partition(a, b);
-        Districts[a] = p.partition1;
-        Districts[b] = p.partition2;
+        Districts[a] = p.P1;
+        Districts[b] = p.P2;
 
         for (int i = 0; i < D; i++)
         {
-            DistrictLookup[p.partition1[i]] = a;
-            DistrictLookup[p.partition2[i]] = b;
+            DistrictLookup[p.P1[i]] = a;
+            DistrictLookup[p.P2[i]] = b;
         }
 
 
