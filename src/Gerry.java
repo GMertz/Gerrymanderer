@@ -53,7 +53,7 @@ public class Gerry implements Gerrymanderer {
             if (VoterAlignments[v] == Party) voters++;
 
             if (count == D) {
-                if (((voters == 0 || (voters >= r && voters < bestCount) || bestCount == Integer.MAX_VALUE) && partitionIsValid(path)) {
+                if (((voters == 0 || (voters >= r && voters < bestCount) || bestCount == Integer.MAX_VALUE) && partitionIsValid(path))) {
                     bestCount = voters;
                     P1 = Arrays.copyOf(path, D);
                     return voters;
@@ -80,7 +80,6 @@ public class Gerry implements Gerrymanderer {
 
             boolean[] visited = new boolean[v];
             boolean[] valid = new boolean[v];
-
 
             int[] other = new int[D]; // if proposal is valid, this will replace P2
             int k = -1; //index for filling 'other'

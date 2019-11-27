@@ -17,7 +17,7 @@ public class ElectorateDrawer {
     public static void main(String[] args) {
         StdDraw.enableDoubleBuffering();
         Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
-        Electorate e = new Electorate(5);
+        Electorate e = new Electorate(29);
         int[][] districts = gerrymanderer.gerrymander(e, true);
         if (!e.isValidMap(districts)) {
             //throw new RuntimeException("Invalid districts");
@@ -80,19 +80,19 @@ public class ElectorateDrawer {
             }
         }
         // Draw dots
-        for (int i = 0; i < v; i++) {
-            int x = i / d;
-            int y = i % d;
-            if (voters[i]) {
-                StdDraw.setPenColor(PURPLE);
-            } else {
-                StdDraw.setPenColor(YELLOW);
-            }
-            StdDraw.filledCircle(x, y, 0.25);
-            StdDraw.setPenColor(Color.BLACK);
-            StdDraw.circle(x, y, 0.25);
-            StdDraw.text(x,y,""+i);
-        }
+//        for (int i = 0; i < v; i++) {
+//            int x = i / d;
+//            int y = i % d;
+//            if (voters[i]) {
+//                StdDraw.setPenColor(PURPLE);
+//            } else {
+//                StdDraw.setPenColor(YELLOW);
+//            }
+//            StdDraw.filledCircle(x, y, 0.25);
+//            StdDraw.setPenColor(Color.BLACK);
+//            StdDraw.circle(x, y, 0.25);
+//            //StdDraw.text(x,y,""+i);
+//        }
         StdDraw.show();
     }
 
