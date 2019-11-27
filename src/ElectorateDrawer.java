@@ -1,5 +1,6 @@
 import edu.princeton.cs.algs4.Graph;
 import edu.princeton.cs.algs4.StdDraw;
+import edu.princeton.cs.algs4.StdOut;
 
 import java.awt.*;
 
@@ -19,7 +20,8 @@ public class ElectorateDrawer {
         Electorate e = new Electorate(5);
         int[][] districts = gerrymanderer.gerrymander(e, true);
         if (!e.isValidMap(districts)) {
-            throw new RuntimeException("Invalid districts");
+            //throw new RuntimeException("Invalid districts");
+            StdOut.println("Invalid");
         }
         draw(e, districts);
         int purple = e.getPurpleWins(districts);
@@ -29,7 +31,8 @@ public class ElectorateDrawer {
         }
         districts = gerrymanderer.gerrymander(e, false);
         if (!e.isValidMap(districts)) {
-            throw new RuntimeException("Invalid districts");
+            //throw new RuntimeException("Invalid districts");
+            StdOut.println("Invalid");
         }
         draw(e, districts);
         int yellow = e.getPurpleWins(districts);
