@@ -1,5 +1,6 @@
 import edu.princeton.cs.algs4.CC;
 import edu.princeton.cs.algs4.Graph;
+import edu.princeton.cs.algs4.StdOut;
 import edu.princeton.cs.algs4.StdRandom;
 
 import java.util.Arrays;
@@ -109,8 +110,11 @@ public class Electorate {
         int v = graph.V();
         boolean[] counted = new boolean[v];
         int sum = 0;
+        int index = 0;
         for (int[] district : districts) {
+
             if (district.length != v / this.districts) {
+                //StdOut.println("District "+index+" is not the correct size");
                 return false; // District not correct size
             }
             for (int voter : district) {
@@ -123,6 +127,7 @@ public class Electorate {
                 counted[voter] = true;
                 sum++;
             }
+            index++;
         }
         if (sum != v) {
             return false; // Not enough voters counted

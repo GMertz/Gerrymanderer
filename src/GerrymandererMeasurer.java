@@ -7,7 +7,7 @@ public class GerrymandererMeasurer {
 
     public static void main(String[] args) {
         Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
-        StdOut.println(measure(29, gerrymanderer, 1));
+        StdOut.println(measure(5, gerrymanderer, 1000));
     }
 
     /**

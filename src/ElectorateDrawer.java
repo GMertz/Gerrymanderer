@@ -17,7 +17,7 @@ public class ElectorateDrawer {
     public static void main(String[] args) {
         StdDraw.enableDoubleBuffering();
         Gerrymanderer gerrymanderer = new Gerry(); // Change this to create an instance of your class
-        Electorate e = new Electorate(29);
+        Electorate e = new Electorate(5);
         int[][] districts = gerrymanderer.gerrymander(e, true);
         if (!e.isValidMap(districts)) {
             //throw new RuntimeException("Invalid districts");
@@ -51,6 +51,7 @@ public class ElectorateDrawer {
         int d = electorate.getNumberOfDistricts();
         StdDraw.setScale(-0.5, d - 0.5);
         // Draw district winner boxes
+        int index = 0;
         for (int[] district : districts) {
             boolean winner = electorate.winner(district);
             for (int i : district) {
@@ -62,7 +63,10 @@ public class ElectorateDrawer {
                     StdDraw.setPenColor(YELLOW);
                 }
                 StdDraw.filledSquare(x, y, 0.35);
+                StdDraw.setPenColor(Color.black);
+                //StdDraw.text(x,y,""+i);
             }
+            index++;
         }
         // Draw lines
         StdDraw.setPenColor(Color.BLACK);
@@ -79,20 +83,20 @@ public class ElectorateDrawer {
                 }
             }
         }
-        // Draw dots
-//        for (int i = 0; i < v; i++) {
-//            int x = i / d;
-//            int y = i % d;
-//            if (voters[i]) {
-//                StdDraw.setPenColor(PURPLE);
-//            } else {
-//                StdDraw.setPenColor(YELLOW);
-//            }
-//            StdDraw.filledCircle(x, y, 0.25);
-//            StdDraw.setPenColor(Color.BLACK);
-//            StdDraw.circle(x, y, 0.25);
-//            //StdDraw.text(x,y,""+i);
-//        }
+         //Draw dots
+        for (int i = 0; i < v; i++) {
+            int x = i / d;
+            int y = i % d;
+            if (voters[i]) {
+                StdDraw.setPenColor(PURPLE);
+            } else {
+                StdDraw.setPenColor(YELLOW);
+            }
+            StdDraw.filledCircle(x, y, 0.25);
+            StdDraw.setPenColor(Color.BLACK);
+            StdDraw.circle(x, y, 0.25);
+            //StdDraw.text(x,y,""+i);
+        }
         StdDraw.show();
     }
 
